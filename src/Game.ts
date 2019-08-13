@@ -1,8 +1,9 @@
 import {Assets} from "./Assets";
-import {Hero} from "./Hero";
 import {Keyboard} from "./Keyboard";
 import {MapMaker} from "./MapMaker";
 import {Camera} from "./Camera";
+import {Perso} from "./Perso";
+import Stats = require('stats.js');
 
 
 export class Game {
@@ -11,40 +12,74 @@ export class Game {
     loader: Assets = new Assets();
     character: File = require('../assets/character.png');
     tiles: File = require('../assets/tiles.png');
-    keyboard: Keyboard = new Keyboard();
-    map: MapMaker = new MapMaker();
-    hero: Hero;
-    tileAtlas: any;
+    map: MapMaker = new MapMaker('../assets/base.set.json', '../assets/base.json');
+    hero: Perso;
+    pnj: Perso[] = [];
+    tileAtlas: HTMLImageElement;
     camera: Camera;
+    width: number;
+    height: number;
+
+    stats: any;
+
+    grid: boolean;
+
+    constructor(width: number, height: number) {
+        console.log(this.map);
+        this.width = width;
+        this.height = height;
+
+        this.stats = new Stats();
+        // this.stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
+        document.body.appendChild(this.stats.dom);
+    }
 
     init() {
 
-        this.keyboard.listenForEvents(
-            [this.keyboard.LEFT, this.keyboard.RIGHT, this.keyboard.UP, this.keyboard.DOWN]);
+
+        Keyboard.listenForEvents(
+            [
+                "ArrowLeft",
+                "ArrowRight",
+                "ArrowUp",
+                "ArrowDown",
+                "KeyQ"
+            ]
+        );
+
 
         this.tileAtlas = this.loader.getImage('tiles');
+        this.hero = new Perso(this.map, this.loader, 160, 160);
+        this.pnj.push(new Perso(this.map, this.loader, 160, 140));
+        this.camera = new Camera(this.map, this.width, this.height);
 
-        this.hero = new Hero(this.map, this.loader, 160, 160);
-        this.camera = new Camera(this.map, 512, 512);
         this.camera.follow(this.hero);
+
     }
 
     update(delta: number) {
+
+
         // handle hero movement with arrow keys
         let dirx = 0;
         let diry = 0;
-        if (this.keyboard.isDown(this.keyboard.LEFT)) {
+
+        if (Keyboard.isDown("ArrowLeft")) {
             dirx = -1;
-        } else if (this.keyboard.isDown(this.keyboard.RIGHT)) {
+        } else if (Keyboard.isDown("ArrowRight")) {
             dirx = 1;
-        } else if (this.keyboard.isDown(this.keyboard.UP)) {
+        } else if (Keyboard.isDown("ArrowUp")) {
             diry = -1;
-        } else if (this.keyboard.isDown(this.keyboard.DOWN)) {
+        } else if (Keyboard.isDown("ArrowDown")) {
             diry = 1;
+        } else if (Keyboard.isDownWithCoolDown("KeyQ")) {
+            console.log('A');
+            this.grid = !this.grid;
         }
 
         this.hero.move(delta, dirx, diry);
         this.camera.update();
+
 
     }
 
@@ -61,7 +96,10 @@ export class Game {
         // draw map top layer
         this._drawLayer(1);
 
-        // this._drawGrid();
+        if (this.grid) {
+            this._drawGrid();
+        }
+
 
     }
 
@@ -89,11 +127,11 @@ export class Game {
 
 
     tick = (elapsed: number) => {
-
+        this.stats.begin();
         window.requestAnimationFrame(this.tick);
 
         // clear previous frame
-        this.ctx.clearRect(0, 0, 512, 512);
+        this.ctx.clearRect(0, 0, this.width, this.height);
 
         // compute delta time in seconds -- also cap it
         let delta = (elapsed - this._previousElapsed) / 1000.0;
@@ -103,7 +141,7 @@ export class Game {
         this.update(delta);
 
         this.render();
-
+        this.stats.end();
     }
 
 
@@ -139,9 +177,11 @@ export class Game {
 
 
     _drawGrid() {
+
         let width = this.map.cols * this.map.tsize;
         let height = this.map.rows * this.map.tsize;
         let x, y;
+
         for (let r = 0; r < this.map.rows; r++) {
             x = -this.camera.x;
             y = r * this.map.tsize - this.camera.y;
@@ -150,6 +190,7 @@ export class Game {
             this.ctx.lineTo(width, y);
             this.ctx.stroke();
         }
+
         for (let c = 0; c < this.map.cols; c++) {
             x = c * this.map.tsize - this.camera.x;
             y = -this.camera.y;

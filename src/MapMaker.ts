@@ -1,7 +1,13 @@
+import {CarteMap} from "./interface/Map";
+import {TileSet} from "./interface/Set";
+
 export class MapMaker {
     cols: number = 12;
     rows: number = 12;
     tsize: number = 64;
+
+    tileset: CarteMap;
+    tilemap: TileSet;
 
     layers: number[][] = [[
         3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
@@ -30,6 +36,12 @@ export class MapMaker {
         4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
         4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3
     ]];
+
+
+    constructor(set: string, map: string) {
+        // this.tileset = require(set);
+        // this.tilemap = require(map);
+    }
 
 
     getTile(layer: any, col: number, row: number) {

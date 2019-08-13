@@ -1,3 +1,5 @@
+import {Perso} from "./Perso";
+
 export class Camera {
 
     x: number;
@@ -6,9 +8,9 @@ export class Camera {
     height: number;
     maxX: number;
     maxY: number;
-    following: any;
+    following: Perso;
 
-    constructor(map: any, width: any, height: any) {
+    constructor(map: any, width: number, height: number) {
         this.x = 0;
         this.y = 0;
         this.width = width;
@@ -17,7 +19,7 @@ export class Camera {
         this.maxY = map.rows * map.tsize - height;
     }
 
-    follow(sprite: any) {
+    follow(sprite: Perso) {
         this.following = sprite;
         sprite.screenX = 0;
         sprite.screenY = 0;
